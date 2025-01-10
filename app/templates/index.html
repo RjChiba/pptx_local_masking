@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="identifier" uid="{{identifier}}">
+	<link rel="stylesheet" href="{{ url_for('static', filename='css/destyle.css') }}">
+	<script src="https://cdn.tailwindcss.com"></script>
+	<link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+	<title>Document</title>
+</head>
+<body>
+	<header class="flex flex-col justify-center items-center">
+		<h1>PPTXMasker</h1>
+	</header>
+	<main class="px-2 flex flex-col gap-4">
+		<div class="border border-slate-900 rounded p-4 bg-white">
+			<h2>対象pptxファイルを選択</h2>
+			<form action="/" method="get" enctype="multipart/form-data">
+				<input name="filepath" id="filepath" type="text" class="border border-slate-900 w-[calc(100%-10rem)]" value={{filepath}}>
+				<button for="filepath" id="filepathButton" class="border border-slate-900 rounded px-2 hover:bg-slate-200">Execute</button>
+			</form>
+		</div>
+		<div class="border border-slate-900 rounded p-4 h-full bg-white overflow-y-scroll">
+			<h2>マスクするテキストを指定</h2>
+			<table class="w-full text-left text-slate-800">
+				<thead>
+					<tr class="border-0 border-b-2 border-slate-400">
+						<th class="py-2 px-4"></th>
+						<th class="py-2">Slide No.</th>
+						<th class="py-2">Text No.</th>
+						<th class="py-2">Text (Original)</th>
+						<th class="py-2">Text (Masked)</th>
+					</tr>
+				</thead>
+				<tbody>
+					{% for data_original in dataset_original %}
+					<tr class="border-0 border-b-2 border-slate-400">
+						<td class="py-2 px-4"><input type="checkbox" class="border-2 border-slate-900 bg-slate-100 checked:bg-slate-500 checked:border-slate-900"></td>
+						<td class="py-2">{{data_original["slide"]}}</td>
+						<td class="py-2">{{data_original["text"]}}</td>
+						<td class="py-2">{{data_original["content"]}}</td>
+						<td class="py-2">{{dataset_masked[loop.index-1]["content"]}}</td>
+					</tr>
+					{% endfor %}
+				</tbody>
+			</table>
+		</div>
+		<div class="p-2 flex flex-row justify-between items-center">
+			<div class="flex flex-row gap-2">
+				<button class="px-2 border border-slate-900 rounded bg-white hover:bg-slate-100" id="button_check_all">
+					<p class="text-center">Check All</p>
+				</button>
+				<button class="px-2 border border-slate-900 rounded bg-white hover:bg-slate-100" id="button_remove_all">
+					<p class="text-center">Remove All</p>
+				</button>
+			</div>
+			<button class="px-2 border border-slate-900 rounded bg-white hover:bg-slate-100" id="button_convert">
+				<h2 class="text-center">pptxファイルのマスク実行</h2>
+			</button>
+		</div>
+	</main>
+	<footer class="flex flex-col justify-center items-center">
+		<p>Developed by 
+			<a href="https://rjchiba.com" target="_blank" class="underline underline-offset-2">Rj.Chiba</a>
+		</p>
+		<p><a href="" target="_blank" class="underline underline-offset-2">GitHub Repository</a></p>
+	</footer>
+</body>
+<script>
+	// check all checkbox
+	const button_check_all = document.getElementById("button_check_all");
+	const checkboxes = document.querySelectorAll("input[type='checkbox']");
+	button_check_all.addEventListener("click", () => {
+		checkboxes.forEach(checkbox => {
+			checkbox.checked = true;
+		});
+	});
+
+	// remove all checkbox
+	const button_uncheck_all = document.getElementById("button_remove_all");
+	button_uncheck_all.addEventListener("click", () => {
+		checkboxes.forEach(checkbox => {
+			checkbox.checked = false;
+		});
+	});
+
+	// convert pptx file
+	const button_convert = document.getElementById("button_convert");
+	button_convert.addEventListener("click", () => {
+		const checked = Array.from(checkboxes).map((checkbox, index) => {
+			if (checkbox.checked) {
+				return index;
+			}
+		}).filter((index) => index !== undefined);
+
+		// get uid
+		const uid = document.querySelector("meta[name='identifier']").getAttribute("uid");
+		
+		// endpoint: /convert
+		// use fetchAPI
+		const url = "/convert";
+		const data = {
+			"checked": checked,
+			"identifier": uid
+		};
+		const options = {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json"
+			},
+			body: JSON.stringify(data)
+		};
+
+		fetch(url, options)
+			.then(response => response.json())
+			.then(data => {
+				if(data.ok){
+					alert("PPTXファイルの変換が完了しました。");
+					window.location.reload();
+				}else{
+					alert("PPTXファイルの変換に失敗しました。");
+					console.log(data);
+				}
+			});
+	});
+
+</script>
+</html>

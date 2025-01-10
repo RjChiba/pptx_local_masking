@@ -1,0 +1,43 @@
+@charset "UTF-8";
+
+/* CSS Document */
+html {
+	font-family: 'Roboto', sans-serif;
+	font-size: 12px;
+}
+
+body {
+	background-color: #f8fafc;
+	height: 100vh;
+	margin: 0;
+}
+
+header {
+	height: 5rem;
+}
+
+main {
+	height: calc(100vh - 10rem);
+}
+
+footer {
+	height: 5rem;
+}
+
+h1 {
+	font-size: 2rem !important;
+}
+
+h2 {
+	font-size: 1.5rem !important;
+}
+
+h3 {
+	font-size: 1.25rem !important;
+}
+
+input[type="checkbox"]{
+	width: 1rem;
+	height: 1rem;
+	border-radius: 0.25rem;
+}
