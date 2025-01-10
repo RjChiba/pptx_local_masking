@@ -23,17 +23,16 @@ def get_xpath(element, root):
 
 class App:
 	def __init__(self):
-		self.mask_types = MaskingFunction.mask_types
+		pass
 
-	def mask(self, dataset, mask_type):
+	def mask(self, dataset):
 		# dataset: list of texts extracted from the file with xmlpath
-		# mask_type: mask types to apply
 		# returns: list of masked texts
 
 		textset = [d["content"] for d in dataset]
 		new_dataset = []
 
-		masker = MaskingFunction(mask_type)
+		masker = MaskingFunction()
 		masked_texts = masker.masker.execute(textset)
 
 		for i, text in enumerate(masked_texts):
@@ -48,12 +47,12 @@ class App:
 
 	def remove_dir(self, exception=None):
 		# returns: None
-		working_dirs = [f for f in os.listdir(os.path.join(os.getcwd(), 'data')) if os.path.isdir(os.path.join(os.getcwd(), 'data', f))]
+		working_dirs = [f for f in os.listdir(os.path.join(os.getcwd(), 'app', 'data')) if os.path.isdir(os.path.join(os.getcwd(), 'app', 'data', f))]
 		for dir_name in working_dirs:
 			if exception and dir_name == exception:
 				continue
 				
-			shutil.rmtree(os.path.join(os.getcwd(), 'data', dir_name))
+			shutil.rmtree(os.path.join(os.getcwd(), 'app', 'data', dir_name))
 
 		return
 
@@ -61,7 +60,7 @@ class App:
 		# file_path: path of the file to copy
 		# uid: unique identifier for dataset
 		# returns: None
-		dir_name = os.path.join(os.getcwd(), 'data')
+		dir_name = os.path.join(os.getcwd(), 'app', 'data')
 		if uid:
 			dir_name = os.path.join(dir_name, uid)
 		
@@ -81,10 +80,10 @@ class App:
 
 	def unzip_pptx(self, file_name):
 		# create dir for extracted files with file_name
-		dir_name = os.path.join(os.getcwd(), 'data', file_name.split(".")[0])
+		dir_name = os.path.join(os.getcwd(), 'app', 'data', file_name.split(".")[0])
 		os.makedirs(dir_name, exist_ok=True)
 
-		targ_file_path = os.path.join(os.getcwd(), 'data' , file_name)
+		targ_file_path = os.path.join(os.getcwd(), 'app', 'data' , file_name)
 		with zipfile.ZipFile(targ_file_path, 'r') as zip_ref:
 			zip_ref.extractall(dir_name)
 

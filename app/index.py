@@ -19,7 +19,6 @@ class PPTXMaskingApp:
         self.app = Flask(__name__)
         self.app.secret_key = os.getenv('FLASK_SECRET_KEY', 'default_secret_key')
         self.app.permanent_session_lifetime = timedelta(minutes=5)
-        self.mask_app = MaskApp()
         self._register_routes()
 
     def _register_routes(self) -> None:
@@ -41,10 +40,10 @@ class PPTXMaskingApp:
         except KeyError:
             return None
 
-    def _process_file(self, file_path: str, uid: str) -> tuple[List, List]:
+    def _process_file(self, maskapp, file_path: str, uid: str) -> tuple[List, List]:
         """Process the PPTX file and return original and masked datasets."""
-        copied_file_path = self.mask_app.copy_pptx(file_path, uid)
-        self.mask_app.unzip_pptx(copied_file_path)
+        copied_file_path = maskapp.copy_pptx(file_path, uid)
+        maskapp.unzip_pptx(copied_file_path)
 
         # Store session data
         session["identifier"] = uid
@@ -52,8 +51,8 @@ class PPTXMaskingApp:
         session["copied_filepath"] = copied_file_path
 
         xml_dir = copied_file_path.replace(".pptx", "")
-        dataset_original = self.mask_app.pptx_text_extract(xml_dir)
-        dataset_masked = self.mask_app.mask(dataset_original, "default")
+        dataset_original = maskapp.pptx_text_extract(xml_dir)
+        dataset_masked = maskapp.mask(dataset_original)
 
         # Save datasets
         self._save_datasets(copied_file_path, dataset_original, dataset_masked)
@@ -84,14 +83,17 @@ class PPTXMaskingApp:
     def index(self):
         """Handle the index route."""
         try:
+            # Initialize
+            maskapp = MaskApp()
+
             file_path = request.args.get("filepath")
             if not file_path:
                 return render_template("index.html", filepath=None, dataset=[], mask_types=[])
 
             uid = self._generate_uid()
-            self.mask_app.remove_dir(exception=uid)
+            maskapp.remove_dir(exception=uid)
             
-            dataset_original, dataset_masked = self._process_file(file_path, uid)
+            dataset_original, dataset_masked = self._process_file(maskapp, file_path, uid)
 
             return render_template("index.html",
                 identifier=uid,
@@ -100,11 +102,15 @@ class PPTXMaskingApp:
                 dataset_masked=dataset_masked)
 
         except Exception as e:
-            return render_template("index.html", filepath=None, dataset=[], mask_types=[], error="")
+            raise e
+            return render_template("index.html", filepath=None, dataset=[], mask_types=[], error=str(e))
 
     def convert(self):
         """Handle the convert route."""
         try:
+            # Initialize
+            maskapp = MaskApp()
+
             data = request.get_json()
             if not data:
                 return jsonify({"error": "No JSON data provided"}), 400
@@ -131,15 +137,15 @@ class PPTXMaskingApp:
 
             # Process and save the masked PPTX
             xml_dir = session_data.copied_filepath.replace(".pptx", "")
-            self.mask_app.pptx_text_replace(xml_dir, masked_dataset)
-            self.mask_app.zip_pptx(xml_dir)
+            maskapp.pptx_text_replace(xml_dir, masked_dataset)
+            maskapp.zip_pptx(xml_dir)
             
             masked_output = session_data.copied_filepath.replace(".pptx", "_masked.pptx")
             final_output = session_data.filepath.replace(".pptx", "_masked.pptx")
-            self.mask_app.reverse_pptx(masked_output, final_output)
+            maskapp.reverse_pptx(masked_output, final_output)
 
             # Cleanup
-            self.mask_app.remove_dir()
+            maskapp.remove_dir()
 
             return jsonify({"ok": True})
 

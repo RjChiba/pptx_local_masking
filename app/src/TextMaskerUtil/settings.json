@@ -1,18 +1,17 @@
 {
 	"plugin":{
-		"masker": [
-			{
-				"name": "default",
+		"applied_masker": "default",
+		"masker": {
+			"default": {
 				"version": "1.0.0",
 				"author": "Karthik",
 				"path": "default/"
 			},
-			{
-				"name": "original",
+			"original": {
 				"version": "1.0.0",
 				"author": "Karthik",
 				"path": "original/"
 			}
-		]
+		}
 	}
 }
